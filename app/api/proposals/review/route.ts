@@ -46,10 +46,10 @@ function internalErrorResponse(status = 500): NextResponse {
   return NextResponse.json(result.body, { status, headers: result.headers });
 }
 
-function requireAuth(request: NextRequest): NextResponse | null {
+async function requireAuth(request: NextRequest): Promise<NextResponse | null> {
   const header = request.headers.get("authorization") ?? "";
   const presented = header.startsWith("Bearer ") ? header.slice(7) : "";
-  const auth = authorizeRequest("internal_worker", {
+  const auth = await authorizeRequest("internal_worker", {
     route: ROUTE,
     presentedSecret: presented,
     expectedSecret: process.env.CRON_SECRET,
@@ -61,7 +61,7 @@ function requireAuth(request: NextRequest): NextResponse | null {
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const denied = requireAuth(request);
+  const denied = await requireAuth(request);
   if (denied) return denied;
 
   if (!isDbConfigured()) {
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const denied = requireAuth(request);
+  const denied = await requireAuth(request);
   if (denied) return denied;
 
   if (!isDbConfigured()) {
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 }
 
 export async function PATCH(request: NextRequest): Promise<NextResponse> {
-  const denied = requireAuth(request);
+  const denied = await requireAuth(request);
   if (denied) return denied;
 
   if (!isDbConfigured()) {
